@@ -1,0 +1,2 @@
+make pycaffe 
+install_name_tool -change libpython2.7.dylib /anaconda/lib/libpython2.7.dylib python/caffe/_caffe.so 
