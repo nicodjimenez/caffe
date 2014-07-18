@@ -93,7 +93,7 @@ layers {
   bottom: "ip1"
   top: "ip2"
   inner_product_param {
-    num_output: 125 
+    num_output: 130 
     weight_filler {
       type: "xavier"
     }
