@@ -59,3 +59,5 @@ _site
 *.sublime-workspace
 *.sublime-project
 
+# image files
+python/cat.png
