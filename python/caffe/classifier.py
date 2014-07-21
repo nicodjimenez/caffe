@@ -2,11 +2,8 @@
 """
 Classifier is an image classifier specialization of Net.
 """
-
 import numpy as np
-
 import caffe
-
 
 class Classifier(caffe.Net):
     """
@@ -42,8 +39,7 @@ class Classifier(caffe.Net):
             image_dims = self.crop_dims
         self.image_dims = image_dims
 
-
-    def predict(self, inputs, oversample=True):
+    def predict(self, inputs, oversample=False):
         """
         Predict classification probabilities of inputs.
 
@@ -63,15 +59,7 @@ class Classifier(caffe.Net):
         if oversample:
             # Generate center, corner, and mirrored crops.
             inputs = caffe.io.oversample(inputs, self.crop_dims)
-        else:
-            # Take center crop.
-            center = np.array(self.image_dims) / 2.0
-            crop = np.tile(center, (1, 2))[0] + np.concatenate([
-                -self.crop_dims / 2.0,
-                self.crop_dims / 2.0
-            ])
-            inputs = inputs[:, crop[0]:crop[2], crop[1]:crop[3], :]
-
+        
         # Classify
         caffe_in = np.asarray([self.preprocess(self.inputs[0], in_)
                     for in_ in inputs])
