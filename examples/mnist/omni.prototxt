@@ -1,15 +1,9 @@
-name: "Omni"
-layers {
-  name: "omni"
-  type: DATA
-  top: "data"
-  top: "label"
-  data_param {
-    source: "omni-train-leveldb"
-    scale: 0.00390625
-    batch_size: 250
-  }
-}
+name: "LeNet"
+input: "data"
+input_dim: 64
+input_dim: 1
+input_dim: 28
+input_dim: 28
 layers {
   name: "conv1"
   type: CONVOLUTION
@@ -101,7 +95,7 @@ layers {
   blobs_lr: 1
   blobs_lr: 2
   inner_product_param {
-    num_output: 121 
+    num_output: 121
     weight_filler {
       type: "xavier"
     }
@@ -111,8 +105,8 @@ layers {
   }
 }
 layers {
-  name: "loss"
-  type: SOFTMAX_LOSS
+  name: "prob"
+  type: SOFTMAX
   bottom: "ip2"
-  bottom: "label"
+  top: "prob"
 }

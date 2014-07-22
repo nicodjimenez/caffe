@@ -13,7 +13,6 @@ import time
 
 import caffe
 
-
 def main(argv):
     pycaffe_dir = os.path.dirname(__file__)
 
