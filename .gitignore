@@ -51,6 +51,13 @@ Makefile.config
 data/*
 examples/*
 
+# nico edits
+!examples/mnist
+*-leveldb
+*iter*
+*.prototxt
+examples/mnist/*.json
+
 # Generated documentation
 docs/_site
 _site
