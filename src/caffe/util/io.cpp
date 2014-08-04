@@ -86,7 +86,7 @@ bool ReadImageToDatum(const string& filename, const int label,
     return false;
   }
   // nico edit: flip image
-  cv_img = cv::Scalar::all(255) - cv_img;
+  //cv_img = cv::Scalar::all(255) - cv_img;
   int num_channels = (iscolor ? 3 : 1);
   datum->set_channels(num_channels);
   datum->set_height(cv_img.rows);
