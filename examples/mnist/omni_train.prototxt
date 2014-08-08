@@ -7,7 +7,7 @@ layers {
   data_param {
     source: "omni-train-leveldb"
     scale: 0.00390625
-    batch_size: 250
+    batch_size: 150
   }
 }
 layers {
@@ -101,7 +101,7 @@ layers {
   blobs_lr: 1
   blobs_lr: 2
   inner_product_param {
-    num_output: 112 
+    num_output: 98 
     weight_filler {
       type: "xavier"
     }

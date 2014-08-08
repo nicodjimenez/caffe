@@ -17,7 +17,7 @@ layers {
   top: "conv1"
   convolution_param {
     num_output: 20
-    kernel_size: 5
+kernel_size: 5
     stride: 1
     weight_filler {
       type: "xavier"
@@ -93,7 +93,7 @@ layers {
   bottom: "ip1"
   top: "ip2"
   inner_product_param {
-    num_output: 112 
+    num_output: 98 
     weight_filler {
       type: "xavier"
     }
