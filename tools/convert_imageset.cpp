@@ -3,7 +3,7 @@
 // proto buffers.
 // Usage:
 //   convert_imageset [-g] ROOTFOLDER/ LISTFILE DB_NAME RANDOM_SHUFFLE[0 or 1] \
-//                     [resize_height] [resize_width]
+//                     [imSize] [charSize]
 // where ROOTFOLDER is the root folder that holds all the images, and LISTFILE
 // should be a list of files as well as their labels, in the format as
 //   subfolder1/file1.JPEG 7
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         "as input for Caffe.\n"
         "Usage:\n"
         "    convert_imageset [-g] ROOTFOLDER/ LISTFILE DB_NAME"
-        " RANDOM_SHUFFLE_DATA[0 or 1] [resize_height] [resize_width]\n"
+        " RANDOM_SHUFFLE_DATA[0 or 1] [imSize] [charSize]\n"
         "The ImageNet dataset for the training demo is at\n"
         "    http://www.image-net.org/download-images\n");
     return 1;
@@ -60,13 +60,13 @@ int main(int argc, char** argv) {
     std::random_shuffle(lines.begin(), lines.end());
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
-  int resize_height = 0;
-  int resize_width = 0;
+  int charSize = 28;
+  int imSize = 42;
   if (argc >= (arg_offset+6)) {
-    resize_height = atoi(argv[arg_offset+5]);
+    imSize = atoi(argv[arg_offset+5]);
   }
   if (argc >= (arg_offset+7)) {
-    resize_width = atoi(argv[arg_offset+6]);
+    charSize = atoi(argv[arg_offset+6]);
   }
 
   leveldb::DB* db;
@@ -88,11 +88,14 @@ int main(int argc, char** argv) {
   int data_size;
   bool data_size_initialized = false;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
-    if (!ReadImageToDatum(root_folder + lines[line_id].first,
-         lines[line_id].second, resize_height, resize_width, iscolor, &datum)) {
+    if (!ReadRawImageToDatum(root_folder + lines[line_id].first,
+         lines[line_id].second, imSize, charSize, &datum)) {
       continue;
     }
     if (!data_size_initialized) {
+      LOG(ERROR) << "Image height: " << datum.height();
+      LOG(ERROR) << "Image width: " << datum.width();
+
       data_size = datum.channels() * datum.height() * datum.width();
       data_size_initialized = true;
     } else {

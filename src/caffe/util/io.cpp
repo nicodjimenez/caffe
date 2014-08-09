@@ -6,8 +6,9 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
+
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <algorithm>
@@ -17,6 +18,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/normalize.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 using std::fstream;
@@ -85,8 +87,6 @@ bool ReadImageToDatum(const string& filename, const int label,
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
-  // nico edit: flip image
-  //cv_img = cv::Scalar::all(255) - cv_img;
   int num_channels = (iscolor ? 3 : 1);
   datum->set_channels(num_channels);
   datum->set_height(cv_img.rows);
@@ -112,6 +112,42 @@ bool ReadImageToDatum(const string& filename, const int label,
         }
       }
   }
+  return true;
+}
+
+
+bool ReadRawImageToDatum(const string& filename, const int label,
+    const int imSize, const int charSize, Datum* datum) {
+  /* Converts unnormalized greyscale image to normalized datum.
+  * 
+  */
+  cv::Mat cv_img;
+  int cv_read_flag = CV_LOAD_IMAGE_GRAYSCALE;
+  cv_img = cv::imread(filename, cv_read_flag);
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return false;
+  }
+  // invert image 
+  cv_img = cv::Scalar::all(255) - cv_img;
+  //LOG(ERROR) << "Just inverted image: " << filename;
+  cv_img = CropImage(cv_img, imSize, charSize);
+  //LOG(ERROR) << "Just cropped image";
+  int num_channels = 1; 
+  datum->set_channels(num_channels);
+  datum->set_height(imSize);
+  datum->set_width(imSize);
+  datum->set_label(label);
+  datum->clear_data();
+  datum->clear_float_data();
+  string* datum_string = datum->mutable_data();
+    for (int h = 0; h < cv_img.rows; ++h) {
+      for (int w = 0; w < cv_img.cols; ++w) {
+        datum_string->push_back(
+          static_cast<char>(cv_img.at<uchar>(h, w)));
+        }
+      }
+  
   return true;
 }
 
