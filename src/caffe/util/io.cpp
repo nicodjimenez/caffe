@@ -116,6 +116,7 @@ bool ReadImageToDatum(const string& filename, const int label,
 }
 
 
+
 bool ReadRawImageToDatum(const string& filename, const int label,
     const int imSize, const int charSize, Datum* datum) {
   /* Converts unnormalized greyscale image to normalized datum.
@@ -131,12 +132,14 @@ bool ReadRawImageToDatum(const string& filename, const int label,
   // invert image 
   cv_img = cv::Scalar::all(255) - cv_img;
   //LOG(ERROR) << "Just inverted image: " << filename;
-  cv_img = CropImage(cv_img, imSize, charSize);
+  
+  // TODO: must uncomment this line because not normalizing now
+  //cv_img = CropImage(cv_img, imSize, charSize);
   //LOG(ERROR) << "Just cropped image";
   int num_channels = 1; 
   datum->set_channels(num_channels);
-  datum->set_height(imSize);
-  datum->set_width(imSize);
+  datum->set_height(cv_img.rows);
+  datum->set_width(cv_img.cols);
   datum->set_label(label);
   datum->clear_data();
   datum->clear_float_data();
@@ -147,7 +150,6 @@ bool ReadRawImageToDatum(const string& filename, const int label,
           static_cast<char>(cv_img.at<uchar>(h, w)));
         }
       }
-  
   return true;
 }
 

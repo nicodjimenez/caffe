@@ -85,23 +85,10 @@ int main(int argc, char** argv) {
   const int kMaxKeyLength = 256;
   char key_cstr[kMaxKeyLength];
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
-  int data_size;
-  bool data_size_initialized = false;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadRawImageToDatum(root_folder + lines[line_id].first,
          lines[line_id].second, imSize, charSize, &datum)) {
       continue;
-    }
-    if (!data_size_initialized) {
-      LOG(ERROR) << "Image height: " << datum.height();
-      LOG(ERROR) << "Image width: " << datum.width();
-
-      data_size = datum.channels() * datum.height() * datum.width();
-      data_size_initialized = true;
-    } else {
-      const string& data = datum.data();
-      CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
-          << data.size();
     }
     // sequential
     snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,

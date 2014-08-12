@@ -13,6 +13,11 @@
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
+#include "caffe/util/normalize.hpp"
+
+// nico remove
+#include <typeinfo>
+
 using std::string;
 
 namespace caffe {
@@ -44,16 +49,25 @@ void* DataLayerPrefetch(void* layer_pointer) {
   const int width = layer->datum_width_;
   const int size = layer->datum_size_;
   const Dtype* mean = layer->data_mean_.cpu_data();
+
+  // nico debug 
+  //LOG(ERROR) << "Height: " << height;
+  //LOG(ERROR) << "Width: " << width;
+  //LOG(ERROR) << "Size: " << size;
+
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     CHECK(layer->iter_);
     CHECK(layer->iter_->Valid());
+    //LOG(ERROR) << "Parsing from string!!!";
     datum.ParseFromString(layer->iter_->value().ToString());
+    NormalizeDatumImage( &datum, 42, 34);
     const string& data = datum.data();
     if (crop_size) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
       int h_off, w_off;
       // We only do random crop when we do training.
+      LOG(ERROR) << "Doing random crop!!!";
       if (layer->phase_ == Caffe::TRAIN) {
         h_off = layer->PrefetchRand() % (height - crop_size);
         w_off = layer->PrefetchRand() % (width - crop_size);
@@ -77,6 +91,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
         }
       } else {
         // Normal copy
+	LOG(ERROR) << "Normal copy";
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < crop_size; ++h) {
             for (int w = 0; w < crop_size; ++w) {
@@ -92,11 +107,18 @@ void* DataLayerPrefetch(void* layer_pointer) {
       }
     } else {
       // we will prefer to use data() first, and then try float_data()
+      //LOG(ERROR) << "Data first";
       if (data.size()) {
+      //LOG(ERROR) << "data.size: " << data.size();
+      //LOG(ERROR) << "size : " << size;
         for (int j = 0; j < size; ++j) {
+//	  uint8_t var = static_cast<uint8_t>(data[j]);
+	  //LOG(ERROR) << "datum: " << int(data[j]);
           Dtype datum_element =
               static_cast<Dtype>(static_cast<uint8_t>(data[j]));
           top_data[item_id * size + j] = (datum_element - mean[j]) * scale;
+	  //LOG(ERROR) << "datum_element type: " << typeid(datum_element).name();
+	  //if (datum_element > 0)  LOG(ERROR) << "datum_element: " << datum_element;
         }
       } else {
         for (int j = 0; j < size; ++j) {
@@ -166,6 +188,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
+  NormalizeDatumImage( &datum, 42, 34);
   // image
   int crop_size = this->layer_param_.data_param().crop_size();
   if (crop_size > 0) {

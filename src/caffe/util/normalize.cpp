@@ -5,16 +5,65 @@
  *      Author: nicodjimenez
  */
 #include <iostream>
+#include "caffe/util/normalize.hpp"
 
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
+//#include "opencv2/imgproc/imgproc.hpp"
+//#include "opencv2/highgui/highgui.hpp"
+//#include "caffe/proto/caffe.pb.h"
+//#include "caffe/common.hpp"
 
 using namespace cv;
 using namespace std;
+using namespace caffe;
 
 //int charSize = 28;
 //int halfSize = imSize / 2;
 //double DOWNSIZE_FACTOR=0.7;
+
+bool NormalizeDatumImage(Datum* datum, const int imSize, const int charSize){
+  /* Modifies datum's data attribute
+  / so that the image is normalized.
+  */
+  Mat img = datum_to_image(datum);
+  Mat norm_img = CropImage(img, imSize, charSize);
+  
+  datum->set_channels(1);
+  datum->set_height(norm_img.rows);
+  datum->set_width(norm_img.cols);
+  datum->clear_data();
+  datum->clear_float_data();
+  
+  string* datum_string = datum->mutable_data();
+    for (int h = 0; h < norm_img.rows; ++h) {
+      for (int w = 0; w < norm_img.cols; ++w) {
+        datum_string->push_back(
+          static_cast<char>(norm_img.at<uchar>(h, w)));
+        }
+      }
+  return true;
+}
+
+Mat datum_to_image(Datum* datum){
+  /* Converts datum to greyscale image.
+  /  Debugging version will just display image.
+  */
+  const string& datum_string = datum->data();
+  int imWidth = datum->width();
+  int imHeight = datum->height();
+  Mat out_image = Mat::zeros(imHeight, imWidth, CV_8UC1);   
+  uchar* row;
+    for (int i = 0; i < out_image.rows; ++i) {
+    row = out_image.ptr<uchar>(i); 
+      for (int j = 0; j < out_image.cols; ++j) {
+        row[j] = static_cast<uchar>(datum_string[j + i*imWidth]);
+        }
+      }
+  
+  //namedWindow( "Display window", WINDOW_AUTOSIZE );
+  //imshow( "Display window", out_image);
+  //waitKey(0);
+  return out_image;
+}
 
 Rect bin_bounding_rect(Mat& image){
 /* Scans a binarized greyscale image for black pixels.  
