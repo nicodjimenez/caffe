@@ -20,6 +20,8 @@
 #include "caffe/util/io.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "caffe/util/normalize.hpp"
+
 using std::fstream;
 using std::ios;
 using std::max;
@@ -114,8 +116,6 @@ bool ReadImageToDatum(const string& filename, const int label,
   return true;
 }
 
-
-
 bool ReadRawImageToDatum(const string& filename, const int label, Datum* datum) {
   /* Converts unnormalized greyscale image to datum.  
   *  Note: does not resize image! This will be done on the fly during training.
@@ -129,6 +129,9 @@ bool ReadRawImageToDatum(const string& filename, const int label, Datum* datum) 
   }
   // invert image 
   cv_img = cv::Scalar::all(255) - cv_img;
+  // crop image 
+  cv_img = crop_image(cv_img);
+
   //LOG(ERROR) << "Just inverted image: " << filename;
   datum->set_channels(1);
   datum->set_height(cv_img.rows);

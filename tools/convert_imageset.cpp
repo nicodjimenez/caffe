@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     format_str = "T%08d_%s";
   }
   else{
-    LOG(ERROR) << "Not testing tag to key strings.";
+    LOG(ERROR) << "Not adding testing tag to key strings.";
   }
   
   LOG(INFO) << "A total of " << lines.size() << " images.";
