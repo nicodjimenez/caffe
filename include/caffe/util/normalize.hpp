@@ -7,6 +7,8 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+void display_datum(caffe::Datum* datum);
+
 cv::Rect bin_bounding_rect(cv::Mat& image);
 
 void resize_roi(cv::Mat& image, const int charSize);

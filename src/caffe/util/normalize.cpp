@@ -35,7 +35,7 @@ Mat distort_image(Mat& image){
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
   
   // rotate image
-  double angle = 10*(gen() + gen() - 1); 
+  double angle = 50*(gen() + gen() - 1); 
   Mat new_image = rotate( image, angle);
   new_image = crop_image(new_image);
 
@@ -94,6 +94,13 @@ bool NormalizeDatumImage(Datum* datum, const string key_str, const int imSize, c
   return true;
 }
 
+void display_datum(Datum* datum){
+  Mat image = datum_to_image(datum);
+  namedWindow( "Display window", WINDOW_AUTOSIZE );
+  imshow( "Display window", image);
+  waitKey(0);
+}
+
 Mat datum_to_image(Datum* datum){
   /* Converts datum to greyscale image.
   /  Debugging version will just display image.
@@ -109,10 +116,6 @@ Mat datum_to_image(Datum* datum){
         row[j] = static_cast<uchar>(datum_string[j + i*imWidth]);
         }
       }
-  
-  //namedWindow( "Display window", WINDOW_AUTOSIZE );
-  //imshow( "Display window", out_image);
-  //waitKey(0);
   return out_image;
 }
 
