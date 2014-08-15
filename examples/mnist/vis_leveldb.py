@@ -24,12 +24,17 @@ def vis_db(db_dir):
         datum.ParseFromString(ser_str)
         #print "Label int: ", datum.label
 	#print "Sym list: ", sym_list
-        #print "\nKey val: ", key_val
-	print "Label: ", sym_list[int(datum.label)]
+        print "\nKey val: ", key_val
+	#print "Label: ", sym_list[int(datum.label)]
         img_pre = np.fromstring(datum.data,dtype=np.uint8)
 	img_dim = np.sqrt(len(img_pre))
         img = img_pre.reshape(img_dim,img_dim)
+
         show_img(img,"img")
+	#print dir(datum.DESCRIPTOR)
+	#print datum.LABEL_FIELD_NUMBER
+	#print datum.width
+	#print datum.height
 
 def main():
     try:    

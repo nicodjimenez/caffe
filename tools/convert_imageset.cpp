@@ -33,53 +33,50 @@ using std::string;
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc < 4 || argc > 8) {
+  if (argc != 6) {
     printf("Convert a set of images to the leveldb format used\n"
         "as input for Caffe.\n"
         "Usage:\n"
-        "    convert_imageset [-g] ROOTFOLDER/ LISTFILE DB_NAME"
-        " RANDOM_SHUFFLE_DATA[0 or 1] [imSize] [charSize]\n"
-        "The ImageNet dataset for the training demo is at\n"
-        "    http://www.image-net.org/download-images\n");
+        "    convert_imageset ROOTFOLDER/ LISTFILE DB_NAME"
+        " RANDOM_SHUFFLE_DATA[0 or 1] ADD_TEST_TAG[0 or 1]\n");
     return 1;
   }
-
-  // Test whether argv[1] == "-g"
-  bool iscolor= !(string("-g") == string(argv[1]));
-  int  arg_offset = (iscolor ? 0 : 1);
-  std::ifstream infile(argv[arg_offset+2]);
+  
+  std::ifstream infile(argv[2]);
   std::vector<std::pair<string, int> > lines;
   string filename;
   int label;
   while (infile >> filename >> label) {
     lines.push_back(std::make_pair(filename, label));
   }
-  if (argc >= (arg_offset+5) && argv[arg_offset+4][0] == '1') {
+  if (argv[4][0] == '1') {
     // randomly shuffle data
-    LOG(INFO) << "Shuffling data";
+    LOG(INFO) << "Shuffling data.";
     std::random_shuffle(lines.begin(), lines.end());
   }
-  LOG(INFO) << "A total of " << lines.size() << " images.";
-  int charSize = 28;
-  int imSize = 42;
-  if (argc >= (arg_offset+6)) {
-    imSize = atoi(argv[arg_offset+5]);
-  }
-  if (argc >= (arg_offset+7)) {
-    charSize = atoi(argv[arg_offset+6]);
-  }
 
+  char* format_str = "%08d_%s";
+  if (argv[5][0] == '1') {
+    // change key string formatting
+    LOG(ERROR) << "Adding testing tag to key strings.";
+    format_str = "T%08d_%s";
+  }
+  else{
+    LOG(ERROR) << "Not testing tag to key strings.";
+  }
+  
+  LOG(INFO) << "A total of " << lines.size() << " images.";
   leveldb::DB* db;
   leveldb::Options options;
   options.error_if_exists = true;
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
-  LOG(INFO) << "Opening leveldb " << argv[arg_offset+3];
+  LOG(INFO) << "Opening leveldb " << argv[3];
   leveldb::Status status = leveldb::DB::Open(
-      options, argv[arg_offset+3], &db);
-  CHECK(status.ok()) << "Failed to open leveldb " << argv[arg_offset+3];
+      options, argv[3], &db);
+  CHECK(status.ok()) << "Failed to open leveldb " << argv[3];
 
-  string root_folder(argv[arg_offset+1]);
+  string root_folder(argv[1]);
   Datum datum;
   int count = 0;
   const int kMaxKeyLength = 256;
@@ -87,11 +84,11 @@ int main(int argc, char** argv) {
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadRawImageToDatum(root_folder + lines[line_id].first,
-         lines[line_id].second, imSize, charSize, &datum)) {
+         lines[line_id].second, &datum)) {
       continue;
     }
     // sequential
-    snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+    snprintf(key_cstr, kMaxKeyLength, format_str, line_id,
         lines[line_id].first.c_str());
     string value;
     // get the value

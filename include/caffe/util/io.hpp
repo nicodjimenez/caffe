@@ -63,7 +63,7 @@ inline void WriteProtoToBinaryFile(
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool iscolor, Datum* datum);
 
-bool ReadRawImageToDatum(const string& filename, const int label, const int imSize, const int charSize, Datum* datum);
+bool ReadRawImageToDatum(const string& filename, const int label, Datum* datum);
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, Datum* datum) {

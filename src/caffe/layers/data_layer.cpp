@@ -59,9 +59,9 @@ void* DataLayerPrefetch(void* layer_pointer) {
     // get a blob
     CHECK(layer->iter_);
     CHECK(layer->iter_->Valid());
-    //LOG(ERROR) << "Parsing from string!!!";
     datum.ParseFromString(layer->iter_->value().ToString());
-    NormalizeDatumImage( &datum, 42, 34);
+    const string key_str = layer->iter_->key().ToString();
+    NormalizeDatumImage( &datum, key_str, 42, 34);
     const string& data = datum.data();
     if (crop_size) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
@@ -188,7 +188,8 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
-  NormalizeDatumImage( &datum, 42, 34);
+  const string key_str = iter_->key().ToString();  
+  NormalizeDatumImage( &datum, key_str, 42, 34);
   // image
   int crop_size = this->layer_param_.data_param().crop_size();
   if (crop_size > 0) {

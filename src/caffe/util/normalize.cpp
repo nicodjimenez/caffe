@@ -6,6 +6,7 @@
  */
 #include <iostream>
 #include "caffe/util/normalize.hpp"
+#include <random>
 
 //#include "opencv2/imgproc/imgproc.hpp"
 //#include "opencv2/highgui/highgui.hpp"
@@ -16,18 +17,47 @@ using namespace cv;
 using namespace std;
 using namespace caffe;
 
-//int charSize = 28;
-//int halfSize = imSize / 2;
-//double DOWNSIZE_FACTOR=0.7;
+Mat rotate(Mat& image, double angle){
+  Point center = Point(image.cols/2.0,image.rows/2.0);
+  Mat rot_mat = getRotationMatrix2D(center, angle, 1.0);
+  Rect bbox = RotatedRect(center, image.size(), angle).boundingRect();
+  rot_mat.at<double>(0,2) += bbox.width/2.0 - center.x; 
+  rot_mat.at<double>(1,2) += bbox.height/2.0 - center.y;
+  Mat dst;
+  warpAffine(image, dst, rot_mat, bbox.size());
+  return dst;
+}
 
-bool NormalizeDatumImage(Datum* datum, const int imSize, const int charSize){
+
+Mat distort_image(Mat& image){
+  // random rotation plus random resize 
+  static default_random_engine generator;
+  static uniform_real_distribution<double> distribution(-10.0,10.0);
+  double angle = distribution(generator);
+  Mat new_image = rotate( image, angle);
+  return new_image;
+}
+
+bool NormalizeDatumImage(Datum* datum, const string key_str, const int imSize, const int charSize){
   /* Modifies datum's data attribute
   / so that the image is normalized.
   */
-  Mat img = datum_to_image(datum);
-  Mat norm_img = CropImage(img, imSize, charSize);
-  
-  datum->set_channels(1);
+  Mat image = datum_to_image(datum);
+  Rect bound_rect = bin_bounding_rect(image);
+  Mat char_image(image,bound_rect); 
+  // this is a hack: we use the first letter in the keystring to encode the fact that we have a training sample, and thus that we we will not distort it
+  if (true){
+  //if (key_str[0] != 'T'){
+    char_image = distort_image(char_image);
+    cout << "Distorted image!" << endl;
+  }
+  Mat norm_img = process_char(char_image, imSize, charSize);
+
+ 
+  namedWindow( "Display window", WINDOW_AUTOSIZE );
+  imshow( "Display window", char_image);
+  waitKey(0);
+
   datum->set_height(norm_img.rows);
   datum->set_width(norm_img.cols);
   datum->clear_data();
@@ -94,18 +124,15 @@ Rect bin_bounding_rect(Mat& image){
 }
 
 void resize_roi(Mat& image,const int charSize){
+  // overwrites image with resized image
   Mat resized_image;
   double nRows = image.rows;
   double nCols = image.cols;
   double size_factor = charSize / max(nRows,nCols); 
-  //cout << "Size factor: " << size_factor << endl;
   int nRows_new = ceil(nRows * size_factor);
   int nCols_new = ceil(nCols * size_factor);
-  //cout << "New rows: " << nRows_new << endl;
-  //cout << "New cols: " << nCols_new << endl;
   Size size_new(nCols_new,nRows_new);
   resize( image, image, size_new);
-  //cout << "Just resized image" << endl;
 }
 
 Point get_com(Mat& image){
@@ -132,24 +159,43 @@ Point get_com(Mat& image){
   return com_point;
 }
 
+Mat process_char(Mat& roi, const int imSize, const int charSize){
+  // takes cropped greyscale (white on black) image and returns centered, resized image
+  static const double halfSize = imSize / 2;
+  Rect sub_image_rect;
+  Mat big_image = Mat::zeros(imSize,imSize, CV_8UC1);
+  Mat big_image_roi; 
+  int xdiff,ydiff;
+  double roi_midx, roi_midy;
+  resize_roi(roi,charSize);	
+  roi_midx = (roi.cols - 1.0) / 2.0;
+  roi_midy = (roi.rows - 1.0) / 2.0;
+  xdiff = halfSize - roi_midx;
+  ydiff = halfSize - roi_midy;
+  sub_image_rect = Rect( xdiff, ydiff, roi.cols, roi.rows);
+  big_image_roi = big_image(sub_image_rect);
+  roi.copyTo(big_image_roi);
+  return big_image;	
+}
+
+/*
 Mat CropImage(Mat& image, const int imSize, const int charSize){
+  Rect bound_rect = bin_bounding_rect(image);
+  Mat char_image(image,bound_rect);
+  Mat big_image = process_char(char_image, imSize, charSize);
+  return big_image;
+}
+
+Mat old_CropImage(Mat& image, const int imSize, const int charSize){
   // takes raw greyscale (white on black) image and returns centered, resized image
   Rect bound_rect = bin_bounding_rect(image);
-  //cout << "Just computed bounding rectangle..." << endl;
-  //cout << "bound_rect.x = " << bound_rect.x << endl;
-  // cout << "bound_rect.y = " << bound_rect.y << endl;
- // cout << "bound_rect.width = " << bound_rect.width << endl;
- // cout << "bound_rect.height = " << bound_rect.height << endl;
   static const double halfSize = imSize / 2;
   Rect sub_image_rect;
   Mat big_image = Mat::zeros(imSize,imSize, CV_8UC1);
   Mat roi(image,bound_rect);
-  //cout << "Just selected roi..." << endl;
   Mat big_image_roi; 
-  //Point com_point;
   int xdiff,ydiff;
   double roi_midx, roi_midy;
-
   resize_roi(roi,charSize);	
   roi_midx = (roi.cols - 1.0) / 2.0;
   roi_midy = (roi.rows - 1.0) / 2.0;
@@ -165,11 +211,6 @@ Mat CropImage(Mat& image, const int imSize, const int charSize){
   big_image_roi = big_image(sub_image_rect);
   roi.copyTo(big_image_roi);
   
-  // debug
-  //com_point = get_com(big_image);
-  //cout << "New X com: " << com_point.x << endl;
-  //cout << "New Y com: " << com_point.y << endl;
-
   return big_image;	
 }
-
+*/ 
