@@ -35,27 +35,32 @@ Mat distort_image(Mat& image){
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
   
   // rotate image
-  double angle = 10*(gen() + gen() - 1); 
+  double angle = 15*(gen() - 0.5); 
   Mat new_image = rotate( image, angle);
-  new_image = crop_image(new_image);
 
   // now resize image
+  double dist = 0.15;
   double nRows = new_image.rows;
   double nCols = new_image.cols;
   int nCols_new, nRows_new;
  
   if (nRows > 10)
-    nRows_new = ceil(nRows * (1 + 0.1*(2*gen()-1)));
+    nRows_new = ceil(nRows * (1 + dist*(2*gen()-1)));
   else
     nRows_new = nRows;
   
   if (nCols > 10)
-    nCols_new = ceil(nCols * (1 + 0.1*(2*gen()-1)));
+    nCols_new = ceil(nCols * (1 + dist*(2*gen()-1)));
   else
     nCols_new = nCols;
 
   Size size_new(nCols_new,nRows_new);
   resize( new_image, new_image, size_new);
+  
+  // rotate image
+  angle = 15*(gen() - 0.5); 
+  new_image = rotate( new_image, angle);
+  new_image = crop_image(new_image);
   
   return new_image;
 }
@@ -73,9 +78,9 @@ bool NormalizeDatumImage(Datum* datum, const string key_str, const int imSize, c
   Mat char_image = datum_to_image(datum);
  
  // this is a hack: we use the first letter in the keystring to encode the fact that we have a training sample, and thus that we we will not distort it
-  if (key_str[0] != 'T'){
-    char_image = distort_image(char_image);
-  }
+//  if (key_str[0] != 'T'){
+//    char_image = distort_image(char_image);
+//  }
 
   Mat norm_img = process_char(char_image, imSize, charSize);
  

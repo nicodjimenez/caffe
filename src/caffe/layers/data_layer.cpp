@@ -16,9 +16,12 @@
 #include "caffe/util/normalize.hpp"
 
 // nico remove
-#include <typeinfo>
+//#include <typeinfo>
 
 using std::string;
+
+int charSize = 34;
+int imSize = 42;
 
 namespace caffe {
 
@@ -61,7 +64,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
     CHECK(layer->iter_->Valid());
     datum.ParseFromString(layer->iter_->value().ToString());
     const string key_str = layer->iter_->key().ToString();
-    NormalizeDatumImage( &datum, key_str, 42, 34);
+    NormalizeDatumImage( &datum, key_str, imSize, charSize);
     const string& data = datum.data();
     if (crop_size) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
@@ -189,7 +192,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
   const string key_str = iter_->key().ToString();  
-  NormalizeDatumImage( &datum, key_str, 42, 34);
+  NormalizeDatumImage( &datum, key_str, imSize, charSize);
   // image
   int crop_size = this->layer_param_.data_param().crop_size();
   if (crop_size > 0) {
