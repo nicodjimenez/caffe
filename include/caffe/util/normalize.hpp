@@ -23,6 +23,8 @@ cv::Mat rotate( cv::Mat& image, double angle);
 
 cv::Mat distort_image(cv::Mat& image);
 
+cv::Mat crop_image(cv::Mat& image);
+
 bool NormalizeDatumImage(caffe::Datum* datum, const std::string key_str, const int imSize, const int charSize);
 
 #endif
