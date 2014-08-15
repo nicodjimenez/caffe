@@ -22,7 +22,7 @@ display: 50
 # The maximum number of iterations
 max_iter: 30000
 # snapshot intermediate results
-snapshot: 5000
+snapshot: 2000
 snapshot_prefix: "omni"
 # solver mode: CPU or GPU
-solver_mode: CPU
+solver_mode: GPU

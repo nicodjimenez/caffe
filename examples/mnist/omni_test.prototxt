@@ -7,7 +7,7 @@ layers {
   data_param {
     source: "omni-test-leveldb"
     scale: 0.00390625
-    batch_size: 150
+    batch_size: 500
   }
 }
 layers {
