@@ -36,7 +36,7 @@ Mat rand_dilate_image(Mat& image){
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
   double sample = gen();
   if (sample > 0.5){
-    //cout << "Dilating image..." << endl;
+    cout << "Dilating image..." << endl;
     dilate(image,image,Mat());
   }
   return image;
@@ -48,7 +48,7 @@ Mat distort_image(Mat& image){
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
   
   // rotate image
-  double angle = 15*(gen() - 0.5); 
+  double angle = 12*(gen() - 0.5); 
   Mat new_image = rotate( image, angle);
 
   // now resize image
@@ -57,21 +57,21 @@ Mat distort_image(Mat& image){
   double nCols = new_image.cols;
   int nCols_new, nRows_new;
  
-  if (nRows > 10)
+  if (nRows > 7)
     nRows_new = ceil(nRows * (1 + dist*(2*gen()-1)));
   else
     nRows_new = nRows;
   
-  if (nCols > 10)
+  if (nCols > 7)
     nCols_new = ceil(nCols * (1 + dist*(2*gen()-1)));
   else
     nCols_new = nCols;
 
   Size size_new(nCols_new,nRows_new);
-  resize( new_image, new_image, size_new);
+  resize( new_image, new_image, size_new, 0, 0, INTER_AREA);
   
   // rotate image
-  angle = 15*(gen() - 0.5); 
+  angle = 12*(gen() - 0.5); 
   new_image = rotate( new_image, angle);
   new_image = crop_image(new_image);
   
@@ -90,16 +90,16 @@ bool NormalizeDatumImage(Datum* datum, const int imSize, const int charSize){
   */
   Mat char_image = datum_to_image(datum);
  
+  if (datum->is_inkml()){
+    char_image = rand_dilate_image(char_image);
+  }
+
  // distort training images
-  if (datum->is_train()){
-    if (datum->is_inkml()){
-      char_image = rand_dilate_image(char_image); 
-    }
+  if (datum->is_train() and !datum->is_mnist() ){
     char_image = distort_image(char_image);
   }
   
   Mat norm_img = process_char(char_image, imSize, charSize);
- 
   datum->set_height(norm_img.rows);
   datum->set_width(norm_img.cols);
   datum->clear_data();
@@ -175,7 +175,10 @@ void resize_roi(Mat& image,const int charSize){
   int nRows_new = ceil(nRows * size_factor);
   int nCols_new = ceil(nCols * size_factor);
   Size size_new(nCols_new,nRows_new);
-  resize( image, image, size_new);
+  if (size_factor < 1)
+    resize( image, image, size_new, 0, 0, INTER_AREA);
+  else
+    resize( image, image, size_new, 0, 0, INTER_LINEAR);
 }
 
 Point get_com(Mat& image){
