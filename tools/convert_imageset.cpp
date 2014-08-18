@@ -86,7 +86,10 @@ int main(int argc, char** argv) {
       continue;
     }
 
-  // set optional parameters
+  // Set optional parameters.
+  // by default data is not normalized
+  datum.set_is_normal(false);
+
   if (is_train)
     datum.set_is_train(true);
   else

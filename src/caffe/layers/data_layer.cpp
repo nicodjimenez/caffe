@@ -64,7 +64,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
     CHECK(layer->iter_->Valid());
     datum.ParseFromString(layer->iter_->value().ToString());
     
-    if (datum.is_normal())
+    if (!datum.is_normal())
       NormalizeDatumImage( &datum, imSize, charSize);
 
     const string& data = datum.data();
@@ -191,7 +191,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
   
-  if (datum.is_normal())
+  if (!datum.is_normal())
     NormalizeDatumImage( &datum, imSize, charSize);
   // image
   int crop_size = this->layer_param_.data_param().crop_size();

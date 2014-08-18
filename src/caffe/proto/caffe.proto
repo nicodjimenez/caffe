@@ -29,7 +29,7 @@ message Datum {
   optional bool is_inkml = 7 [default = false];
   optional bool is_train = 8 [default = false];
   optional bool is_mnist = 9 [default = false];
-  optional bool is_normal = 10 [default = false];
+  optional bool is_normal = 10 [default = true];
 }
 
 message FillerParameter {
