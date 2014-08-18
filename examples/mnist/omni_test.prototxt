@@ -5,7 +5,7 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "omni-test-leveldb"
+    source: "db_omni/omni-test-leveldb"
     scale: 0.00390625
     batch_size: 500
   }

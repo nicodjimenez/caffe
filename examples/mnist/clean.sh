@@ -1,4 +1,4 @@
-rm omni_iter*
-rm lenet_iter*
+rm -f omni_iter*
+rm -f lenet_iter*
 #rm *.json
 
