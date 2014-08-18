@@ -50,7 +50,9 @@ int main(int argc, char** argv) {
     //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
     datum.ParseFromString(it->value().ToString());
     const string key_str = it->key().ToString();
-    //NormalizeDatumImage( &datum, key_str, 50, 25);
+    LOG(ERROR) << "Key string: " << key_str;
+    LOG(ERROR) << "Is inkml: " << datum.is_inkml();
+    NormalizeDatumImage( &datum, 42, 34);
     display_datum( &datum);
   }
   assert(it->status().ok());  // Check for any errors found during the scan

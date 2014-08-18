@@ -1,4 +1,5 @@
 ## General
+*.swo
 
 # Compiled Object files
 *.slo

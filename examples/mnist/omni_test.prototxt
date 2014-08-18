@@ -16,8 +16,8 @@ layers {
   bottom: "data"
   top: "conv1"
   convolution_param {
-    num_output: 20
-kernel_size: 5
+    num_output: 30
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "xavier"
@@ -26,6 +26,12 @@ kernel_size: 5
       type: "constant"
     }
   }
+}
+layers {
+  name: "relu0"
+  type: RELU
+  bottom: "conv1"
+  top: "conv1"
 }
 layers {
   name: "pool1"

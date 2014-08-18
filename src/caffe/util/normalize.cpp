@@ -29,6 +29,19 @@ Mat rotate(Mat& image, double angle){
   return dst;
 }
 
+Mat rand_dilate_image(Mat& image){
+  // randomly dilate image 
+  //cout << "Maybe will distort image..." << endl;
+  static boost::minstd_rand intgen;
+  static boost::uniform_01<boost::minstd_rand> gen(intgen);
+  double sample = gen();
+  if (sample > 0.5){
+    //cout << "Dilating image..." << endl;
+    dilate(image,image,Mat());
+  }
+  return image;
+}
+
 Mat distort_image(Mat& image){
   // random rotation plus random resize 
   static boost::minstd_rand intgen;
@@ -71,17 +84,20 @@ Mat crop_image(Mat& image){
   return cropped_image;
 }
 
-bool NormalizeDatumImage(Datum* datum, const string key_str, const int imSize, const int charSize){
+bool NormalizeDatumImage(Datum* datum, const int imSize, const int charSize){
   /* Modifies datum's data attribute
   / so that the image is normalized.
   */
   Mat char_image = datum_to_image(datum);
  
- // this is a hack: we use the first letter in the keystring to encode the fact that we have a training sample, and thus that we we will not distort it
-//  if (key_str[0] != 'T'){
-//    char_image = distort_image(char_image);
-//  }
-
+ // distort training images
+  if (datum->is_train()){
+    if (datum->is_inkml()){
+      char_image = rand_dilate_image(char_image); 
+    }
+    char_image = distort_image(char_image);
+  }
+  
   Mat norm_img = process_char(char_image, imSize, charSize);
  
   datum->set_height(norm_img.rows);
@@ -130,7 +146,6 @@ Rect bin_bounding_rect(Mat& image){
 */
   int channels = image.channels();
   CV_Assert(channels == 1);
-  //cout << "Number of channels: " << channels << endl;
   int nRows = image.rows;
   int nCols = image.cols;
   int jmax = 0,jmin = nCols;

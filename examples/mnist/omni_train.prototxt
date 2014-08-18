@@ -18,7 +18,7 @@ layers {
   blobs_lr: 1
   blobs_lr: 2
   convolution_param {
-    num_output: 20
+    num_output: 30
     kernel_size: 5
     stride: 1
     weight_filler {
@@ -28,6 +28,12 @@ layers {
       type: "constant"
     }
   }
+}
+layers {
+  name: "relu0"
+  type: RELU
+  bottom: "conv1"
+  top: "conv1"
 }
 layers {
   name: "pool1"

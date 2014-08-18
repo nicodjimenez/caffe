@@ -26,8 +26,9 @@ message Datum {
   optional int32 label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
-  optional bool is_inkml = 7;
-  optional bool is_train = 8;
+  optional bool is_inkml = 7 [default = false];
+  optional bool is_train = 8 [default = false];
+  optional bool is_mnist = 9 [default = false];
 }
 
 message FillerParameter {

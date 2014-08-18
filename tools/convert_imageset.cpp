@@ -55,16 +55,10 @@ int main(int argc, char** argv) {
     std::random_shuffle(lines.begin(), lines.end());
   }
 
-  char* format_str = "%08d_%s";
-  if (argv[5][0] == '1') {
-    // change key string formatting
-    LOG(ERROR) << "Adding testing tag to key strings.";
-    format_str = "T%08d_%s";
-  }
-  else{
-    LOG(ERROR) << "Not adding testing tag to key strings.";
-  }
-  
+  bool is_train = false;
+  if (argv[5][0] == '1') 
+    is_train = true;
+  LOG(ERROR) << "Is training data: " << is_train;
   LOG(INFO) << "A total of " << lines.size() << " images.";
   leveldb::DB* db;
   leveldb::Options options;
@@ -82,14 +76,34 @@ int main(int argc, char** argv) {
   const int kMaxKeyLength = 256;
   char key_cstr[kMaxKeyLength];
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
+  // some substrings that we want to look for to instruct how to augment dataset
+  string inkml_substr = "inkml";
+  string mnist_substr = "mnist";
+  string file_name;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
-    if (!ReadRawImageToDatum(root_folder + lines[line_id].first,
-         lines[line_id].second, &datum)) {
+    file_name = lines[line_id].first;
+    if (!ReadRawImageToDatum(root_folder + file_name, lines[line_id].second, &datum)) {
       continue;
     }
+
+  // set optional parameters
+  if (is_train)
+    datum.set_is_train(true);
+  else
+    datum.set_is_train(false);
+
+  if (file_name.find(inkml_substr) != string::npos)
+    datum.set_is_inkml(true);
+  else
+    datum.set_is_inkml(false);
+    
+  if (file_name.find(mnist_substr) != string::npos) 
+    datum.set_is_mnist(true);
+  else
+    datum.set_is_mnist(false);
+    
     // sequential
-    snprintf(key_cstr, kMaxKeyLength, format_str, line_id,
-        lines[line_id].first.c_str());
+    snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id, lines[line_id].first.c_str());
     string value;
     // get the value
     datum.SerializeToString(&value);
