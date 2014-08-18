@@ -63,13 +63,15 @@ void* DataLayerPrefetch(void* layer_pointer) {
     CHECK(layer->iter_);
     CHECK(layer->iter_->Valid());
     datum.ParseFromString(layer->iter_->value().ToString());
-    NormalizeDatumImage( &datum, imSize, charSize);
+    
+    if (datum.is_normal())
+      NormalizeDatumImage( &datum, imSize, charSize);
+
     const string& data = datum.data();
     if (crop_size) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
       int h_off, w_off;
       // We only do random crop when we do training.
-      LOG(ERROR) << "Doing random crop!!!";
       if (layer->phase_ == Caffe::TRAIN) {
         h_off = layer->PrefetchRand() % (height - crop_size);
         w_off = layer->PrefetchRand() % (width - crop_size);
@@ -92,8 +94,6 @@ void* DataLayerPrefetch(void* layer_pointer) {
           }
         }
       } else {
-        // Normal copy
-	LOG(ERROR) << "Normal copy";
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < crop_size; ++h) {
             for (int w = 0; w < crop_size; ++w) {
@@ -190,7 +190,9 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
-  NormalizeDatumImage( &datum, imSize, charSize);
+  
+  if (datum.is_normal())
+    NormalizeDatumImage( &datum, imSize, charSize);
   // image
   int crop_size = this->layer_param_.data_param().crop_size();
   if (crop_size > 0) {
