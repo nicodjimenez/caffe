@@ -36,7 +36,7 @@ Mat rand_dilate_image(Mat& image){
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
   double sample = gen();
   if (sample > 0.5){
-    cout << "Dilating image..." << endl;
+    //cout << "Dilating image..." << endl;
     dilate(image,image,Mat());
   }
   return image;
