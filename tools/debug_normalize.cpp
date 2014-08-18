@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
     datum.ParseFromString(it->value().ToString());
     const string key_str = it->key().ToString();
-    NormalizeDatumImage( &datum, key_str, 50, 25);
+    //NormalizeDatumImage( &datum, key_str, 50, 25);
     display_datum( &datum);
   }
   assert(it->status().ok());  // Check for any errors found during the scan
