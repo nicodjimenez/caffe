@@ -35,7 +35,7 @@ Mat rand_dilate_image(Mat& image){
   static boost::minstd_rand intgen;
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
   double sample = gen();
-  if (sample > 0.5){
+  if (sample > 0.3){
     //cout << "Dilating image..." << endl;
     dilate(image,image,Mat());
   }
@@ -48,30 +48,36 @@ Mat distort_image(Mat& image){
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
   
   // rotate image
-  double angle = 12*(gen() - 0.5); 
+  double angle = 8*(gen() - 0.5); 
+  //cout << "Angle 1: " << angle << endl;
   Mat new_image = rotate( image, angle);
 
   // now resize image
-  double dist = 0.15;
+  double dist = 0.30;
   double nRows = new_image.rows;
   double nCols = new_image.cols;
-  int nCols_new, nRows_new;
- 
-  if (nRows > 7)
-    nRows_new = ceil(nRows * (1 + dist*(2*gen()-1)));
-  else
-    nRows_new = nRows;
+  int nCols_new = nCols;
+  int nRows_new = nRows;
   
-  if (nCols > 7)
-    nCols_new = ceil(nCols * (1 + dist*(2*gen()-1)));
-  else
-    nCols_new = nCols;
-
+  if (nRows > nCols){
+    // distort height
+    if (nRows > 7){
+      nRows_new = ceil(nRows * (1 + dist*(2*gen()-1)));
+    }
+  }
+  else{
+    // distort width
+    if (nCols > 7){
+      nCols_new = ceil(nCols * (1 + dist*(2*gen()-1)));
+    }
+  }
+  
   Size size_new(nCols_new,nRows_new);
   resize( new_image, new_image, size_new, 0, 0, INTER_AREA);
   
   // rotate image
-  angle = 12*(gen() - 0.5); 
+  angle = 8*(gen() - 0.5); 
+  //cout << "Angle 2: " << angle << endl;
   new_image = rotate( new_image, angle);
   new_image = crop_image(new_image);
   
@@ -88,20 +94,22 @@ bool NormalizeDatumImage(Datum* datum, const int imSize, const int charSize){
   /* Modifies datum's data attribute
   / so that the image is normalized.
   */
+  if (datum->is_normal()) return true;
+
   Mat char_image = datum_to_image(datum);
- 
-  if (datum->is_inkml()){
-    char_image = rand_dilate_image(char_image);
-  }
 
  // distort training images
-  if (datum->is_train() and !datum->is_mnist() ){
+  if (datum->is_train()){
+    if (datum->is_inkml()){
+      char_image = rand_dilate_image(char_image);
+    }
     char_image = distort_image(char_image);
   }
   
   Mat norm_img = process_char(char_image, imSize, charSize);
   datum->set_height(norm_img.rows);
   datum->set_width(norm_img.cols);
+  datum->set_is_normal(true);
   datum->clear_data();
   datum->clear_float_data();
   

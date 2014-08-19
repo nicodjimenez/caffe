@@ -8,4 +8,5 @@ echo "Hardware: "
 lspci -nn | grep NVIDIA
 
 TOOLS=../../build/tools
-GLOG_logtostderr=1 $TOOLS/train_net.bin omni_solver.prototxt
+GLOG_logtostderr=1 $TOOLS/train_net.bin omni_solver.prototxt 2> omni.log
+cat omni.log | mail -s "Omni training" njimene2@stanford.edu

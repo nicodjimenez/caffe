@@ -52,8 +52,10 @@ int main(int argc, char** argv) {
     const string key_str = it->key().ToString();
     LOG(ERROR) << "Key string: " << key_str;
     LOG(ERROR) << "Is inkml: " << datum.is_inkml();
+    LOG(ERROR) << "Is normalized: " << datum.is_normal();
     LOG(ERROR) << "Is mnist: " << datum.is_mnist();
     LOG(ERROR) << "Is train: " << datum.is_train();
+    LOG(ERROR) << "Is normal: " << datum.is_normal();
     NormalizeDatumImage( &datum, 42, 34);
     display_datum( &datum);
   }
