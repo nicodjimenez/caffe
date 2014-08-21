@@ -60,6 +60,12 @@ layers {
   }
 }
 layers {
+  name: "relu_2"
+  type: RELU
+  bottom: "conv2"
+  top: "conv2"
+}
+layers {
   name: "pool2"
   type: POOLING
   bottom: "conv2"

@@ -15,14 +15,13 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
-
+// something..
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
 #ifndef NPY_ARRAY_C_CONTIGUOUS
 #define NPY_ARRAY_C_CONTIGUOUS NPY_C_CONTIGUOUS
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
-
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using boost::python::extract;

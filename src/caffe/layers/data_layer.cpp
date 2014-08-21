@@ -20,7 +20,7 @@
 
 using std::string;
 
-int charSize = 38;
+int charSize = 34;
 int imSize = 42;
 
 namespace caffe {

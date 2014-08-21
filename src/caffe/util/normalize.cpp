@@ -29,7 +29,7 @@ Mat rotate(Mat& image, double angle){
   return dst;
 }
 
-Mat rand_dilate_image(Mat& image){
+void rand_dilate_image(Mat& image){
   // randomly dilate image 
   //cout << "Maybe will distort image..." << endl;
   static boost::minstd_rand intgen;
@@ -39,23 +39,26 @@ Mat rand_dilate_image(Mat& image){
     //cout << "Dilating image..." << endl;
     dilate(image,image,Mat());
   }
-  return image;
 }
 
-Mat distort_image(Mat& image){
+void rand_rotation(Mat& image){
   // random rotation plus random resize 
   static boost::minstd_rand intgen;
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
-  
   // rotate image
-  double angle = 8*(gen() - 0.5); 
-  //cout << "Angle 1: " << angle << endl;
-  Mat new_image = rotate( image, angle);
+  double angle = 4 * (2 * gen() - 1); 
+  //cout << "Angle: " << angle << endl;
+  image = rotate( image, angle);
+}
 
+void rand_scale(Mat& image){
+  static boost::minstd_rand intgen;
+  static boost::uniform_01<boost::minstd_rand> gen(intgen);
   // now resize image
-  double dist = 0.30;
-  double nRows = new_image.rows;
-  double nCols = new_image.cols;
+  double dist = 0.08;
+  //cout << "Scaling image" << endl;
+  double nRows = image.rows;
+  double nCols = image.cols;
   int nCols_new = nCols;
   int nRows_new = nRows;
   
@@ -71,17 +74,28 @@ Mat distort_image(Mat& image){
       nCols_new = ceil(nCols * (1 + dist*(2*gen()-1)));
     }
   }
-  
   Size size_new(nCols_new,nRows_new);
-  resize( new_image, new_image, size_new, 0, 0, INTER_AREA);
-  
-  // rotate image
-  angle = 8*(gen() - 0.5); 
-  //cout << "Angle 2: " << angle << endl;
-  new_image = rotate( new_image, angle);
-  new_image = crop_image(new_image);
-  
-  return new_image;
+  resize( image, image, size_new, 0, 0, INTER_AREA);
+}
+
+void distort_image(Mat& image, const string& latex){
+  // random rotation plus random resize 
+  static boost::minstd_rand intgen;
+  static boost::uniform_01<boost::minstd_rand> gen(intgen);
+  // initialize special characters not to rotate 
+  //static string array_0[] = {"1","7"};
+  //static string array_1[] = {"a","9","q","g","b","6","5","s","\\int","+","t","(",")","c","C"};
+  //static vector<string> no_rotation(array_0,array_0 + 2);
+  //static vector<string> no_scale(array_1, array_1 + 2);
+  //bool can_rotate = find(no_rotation.begin(), no_rotation.end(), latex) == no_rotation.end();
+  //bool can_scale = find(no_scale.begin(), no_scale.end(), latex) == no_scale.end();
+  bool can_rotate=true, can_scale=false;
+
+  // if we cannot find the element in the list of symbols to skip
+  if (can_rotate) rand_rotation(image); 
+  if (can_scale) rand_scale(image);
+  if (can_rotate) rand_rotation(image);
+  image = crop_image(image);
 }
 
 Mat crop_image(Mat& image){
@@ -97,16 +111,20 @@ bool NormalizeDatumImage(Datum* datum, const int imSize, const int charSize){
   if (datum->is_normal()) return true;
 
   Mat char_image = datum_to_image(datum);
-
+  Mat norm_img;
  // distort training images
   if (datum->is_train()){
     if (datum->is_inkml()){
-      char_image = rand_dilate_image(char_image);
+      rand_dilate_image(char_image);
     }
-    char_image = distort_image(char_image);
+    distort_image(char_image, datum->latex());
+    norm_img = rand_process_char(char_image, imSize, charSize);
   }
-  
-  Mat norm_img = process_char(char_image, imSize, charSize);
+  else{
+    // usual normalization
+    norm_img = process_char(char_image, imSize, charSize);
+  }
+
   datum->set_height(norm_img.rows);
   datum->set_width(norm_img.cols);
   datum->set_is_normal(true);
@@ -213,13 +231,40 @@ Point get_com(Mat& image){
   return com_point;
 }
 
+
+Mat rand_process_char(Mat& roi, const int imSize, const int charSize){
+  // takes cropped greyscale (white on black) image and returns centered, resized image plus random jitter
+  static boost::minstd_rand intgen;
+  static boost::uniform_01<boost::minstd_rand> gen(intgen);
+  static const double halfSize = imSize / 2;
+  Rect sub_image_rect;
+  Mat big_image = Mat::zeros(imSize,imSize, CV_8UC1);
+  Mat big_image_roi; 
+  double xdiff,ydiff;
+  double roi_midx, roi_midy;
+
+  // distort character size a bit
+  int dist_charSize = round(1*(2*gen()-1) + charSize);
+  resize_roi(roi,dist_charSize);	
+  roi_midx = (roi.cols - 1.0) / 2.0;
+  roi_midy = (roi.rows - 1.0) / 2.0;
+  double jitter_x = 3*(2*gen() - 1);
+  double jitter_y = 3*(2*gen() - 1);
+  xdiff = jitter_x + halfSize - roi_midx;
+  ydiff = jitter_y + halfSize - roi_midy;
+  sub_image_rect = Rect( xdiff, ydiff, roi.cols, roi.rows);
+  big_image_roi = big_image(sub_image_rect);
+  roi.copyTo(big_image_roi);
+  return big_image;	
+} 
+
 Mat process_char(Mat& roi, const int imSize, const int charSize){
   // takes cropped greyscale (white on black) image and returns centered, resized image
   static const double halfSize = imSize / 2;
   Rect sub_image_rect;
   Mat big_image = Mat::zeros(imSize,imSize, CV_8UC1);
   Mat big_image_roi; 
-  int xdiff,ydiff;
+  double xdiff,ydiff;
   double roi_midx, roi_midy;
   resize_roi(roi,charSize);	
   roi_midx = (roi.cols - 1.0) / 2.0;
@@ -229,42 +274,6 @@ Mat process_char(Mat& roi, const int imSize, const int charSize){
   sub_image_rect = Rect( xdiff, ydiff, roi.cols, roi.rows);
   big_image_roi = big_image(sub_image_rect);
   roi.copyTo(big_image_roi);
-  return big_image;	
-}
-
-/*
-Mat CropImage(Mat& image, const int imSize, const int charSize){
-  Rect bound_rect = bin_bounding_rect(image);
-  Mat char_image(image,bound_rect);
-  Mat big_image = process_char(char_image, imSize, charSize);
   return big_image;
 }
 
-Mat old_CropImage(Mat& image, const int imSize, const int charSize){
-  // takes raw greyscale (white on black) image and returns centered, resized image
-  Rect bound_rect = bin_bounding_rect(image);
-  static const double halfSize = imSize / 2;
-  Rect sub_image_rect;
-  Mat big_image = Mat::zeros(imSize,imSize, CV_8UC1);
-  Mat roi(image,bound_rect);
-  Mat big_image_roi; 
-  int xdiff,ydiff;
-  double roi_midx, roi_midy;
-  resize_roi(roi,charSize);	
-  roi_midx = (roi.cols - 1.0) / 2.0;
-  roi_midy = (roi.rows - 1.0) / 2.0;
-  xdiff = halfSize - roi_midx;
-  ydiff = halfSize - roi_midy;
-  sub_image_rect = Rect( xdiff, ydiff, roi.cols, roi.rows);
-  // COM centering method
-  //com_point = get_com(roi);
-  //xdiff = halfSize - com_point.x; 
-  //ydiff = halfSize - com_point.y;
-  //sub_image_rect = Rect( xdiff, ydiff, roi.cols, roi.rows);
-  
-  big_image_roi = big_image(sub_image_rect);
-  roi.copyTo(big_image_roi);
-  
-  return big_image;	
-}
-*/ 

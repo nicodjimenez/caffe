@@ -30,6 +30,7 @@ message Datum {
   optional bool is_train = 8 [default = false];
   optional bool is_mnist = 9 [default = false];
   optional bool is_normal = 10 [default = true];
+  optional string latex = 11;
 }
 
 message FillerParameter {

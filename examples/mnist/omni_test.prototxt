@@ -7,7 +7,7 @@ layers {
   data_param {
     source: "db_omni/omni-test-leveldb"
     scale: 0.00390625
-    batch_size: 200
+    batch_size: 250
   }
 }
 layers {
@@ -60,6 +60,12 @@ layers {
       type: "constant"
     }
   }
+}
+layers {
+  name: "relu_2"
+  type: RELU
+  bottom: "conv2"
+  top: "conv2"
 }
 layers {
   name: "pool2"

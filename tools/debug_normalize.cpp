@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
     datum.ParseFromString(it->value().ToString());
     const string key_str = it->key().ToString();
     LOG(ERROR) << "Key string: " << key_str;
+    LOG(ERROR) << "latex: " << datum.latex();
     LOG(ERROR) << "Is inkml: " << datum.is_inkml();
     LOG(ERROR) << "Is normalized: " << datum.is_normal();
     LOG(ERROR) << "Is mnist: " << datum.is_mnist();

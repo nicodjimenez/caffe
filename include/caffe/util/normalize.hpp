@@ -21,11 +21,17 @@ cv::Mat datum_to_image(caffe::Datum* datum);
 
 cv::Mat process_char(cv::Mat& roi, const int imSize, const int charSize);
 
+cv::Mat rand_process_char(cv::Mat& roi, const int imSize, const int charSize);
+
+void rand_rotate(cv::Mat& image);
+
+void rand_dilate_image(cv::Mat& image);
+
+void rand_scale(cv::Mat& image);
+
 cv::Mat rotate( cv::Mat& image, double angle);
 
-cv::Mat distort_image(cv::Mat& image);
-
-cv::Mat rand_dilate_image(cv::Mat& image);
+void distort_image(cv::Mat& image, const std::string& latex);
 
 cv::Mat crop_image(cv::Mat& image);
 

@@ -44,15 +44,17 @@ int main(int argc, char** argv) {
   
   std::ifstream infile(argv[2]);
   std::vector<std::pair<string, int> > lines;
-  string filename;
+  std::vector<string> latex_lines;
+  string filename, latex;
   int label;
-  while (infile >> filename >> label) {
+  while (infile >> filename >> latex >>  label) {
     lines.push_back(std::make_pair(filename, label));
+    latex_lines.push_back(latex);
   }
   if (argv[4][0] == '1') {
     // randomly shuffle data
-    LOG(INFO) << "Shuffling data.";
-    std::random_shuffle(lines.begin(), lines.end());
+    LOG(INFO) << "Warning: shuffling data functionality turned off.";
+    //std::random_shuffle(lines.begin(), lines.end());
   }
 
   bool is_train = false;
@@ -80,14 +82,17 @@ int main(int argc, char** argv) {
   string inkml_substr = "inkml";
   string mnist_substr = "mnist";
   string file_name;
+
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     file_name = lines[line_id].first;
+    latex = latex_lines[line_id];
     if (!ReadRawImageToDatum(root_folder + file_name, lines[line_id].second, &datum)) {
       continue;
     }
 
   // Set optional parameters.
   // by default data is not normalized
+  datum.set_latex(latex);
   datum.set_is_normal(false);
 
   if (is_train)
