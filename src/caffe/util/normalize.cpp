@@ -45,10 +45,13 @@ void rand_rotation(Mat& image){
   // random rotation plus random resize 
   static boost::minstd_rand intgen;
   static boost::uniform_01<boost::minstd_rand> gen(intgen);
-  // rotate image
-  double angle = 4 * (2 * gen() - 1); 
-  //cout << "Angle: " << angle << endl;
-  image = rotate( image, angle);
+  // we rotate the image half the time
+  if (gen() > 0.7){
+    // rotate image
+    double angle = 4 * (2 * gen() - 1); 
+    //cout << "Angle: " << angle << endl;
+    image = rotate( image, angle);
+  }
 }
 
 void rand_scale(Mat& image){
@@ -198,8 +201,8 @@ void resize_roi(Mat& image,const int charSize){
   double nRows = image.rows;
   double nCols = image.cols;
   double size_factor = charSize / max(nRows,nCols); 
-  int nRows_new = ceil(nRows * size_factor);
-  int nCols_new = ceil(nCols * size_factor);
+  int nRows_new = round(nRows * size_factor);
+  int nCols_new = round(nCols * size_factor);
   Size size_new(nCols_new,nRows_new);
   if (size_factor < 1)
     resize( image, image, size_new, 0, 0, INTER_AREA);
@@ -240,16 +243,27 @@ Mat rand_process_char(Mat& roi, const int imSize, const int charSize){
   Rect sub_image_rect;
   Mat big_image = Mat::zeros(imSize,imSize, CV_8UC1);
   Mat big_image_roi; 
-  double xdiff,ydiff;
-  double roi_midx, roi_midy;
-
+  static double xdiff,ydiff,jitter_x,jitter_y;
+  static double roi_midx, roi_midy;
   // distort character size a bit
-  int dist_charSize = round(1*(2*gen()-1) + charSize);
-  resize_roi(roi,dist_charSize);	
+  //int dist_charSize = round(1*(2*gen()-1) + charSize);
+  resize_roi(roi,charSize);	
   roi_midx = (roi.cols - 1.0) / 2.0;
   roi_midy = (roi.rows - 1.0) / 2.0;
-  double jitter_x = 3*(2*gen() - 1);
-  double jitter_y = 3*(2*gen() - 1);
+
+  // randomly apply random jitter
+  if (gen() > 0.7)
+    jitter_x = 2*(2*gen() - 1);
+  else
+    jitter_x = 0;
+  
+  if (gen() > 0.7)
+    jitter_y = 2*(2*gen() - 1);
+  else
+    jitter_y = 0;
+
+  //cout << "jitter x: " << jitter_x << endl; 
+  //cout << "jitter y: " << jitter_y << endl; 
   xdiff = jitter_x + halfSize - roi_midx;
   ydiff = jitter_y + halfSize - roi_midy;
   sub_image_rect = Rect( xdiff, ydiff, roi.cols, roi.rows);
